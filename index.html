@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot (Demo) - Infinite AI</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary-color: #6366f1;
+            --accent-color: #3b82f6;
+            --dark-color: #1e293b;
+            --light-color: #f1f5f9;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --border-radius: 0.5rem;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 1rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .logo i {
+            font-size: 1.75rem;
+        }
+
+        .tagline {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .sidebar {
+            width: 300px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 1rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--success-color);
+            margin-left: auto;
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-height: 60vh;
+        }
+
+        .message {
+            display: flex;
+            gap: 1rem;
+            max-width: 80%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .avatar.bot {
+            background-color: var(--primary-light);
+            color: white;
+        }
+
+        .avatar.user {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .message-content {
+            background-color: var(--gray-100);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            position: relative;
+        }
+
+        .message.user .message-content {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .message-content::before {
+            content: "";
+            position: absolute;
+            top: 15px;
+            left: -8px;
+            border-width: 8px 8px 8px 0;
+            border-style: solid;
+            border-color: transparent var(--gray-100) transparent transparent;
+        }
+
+        .message.user .message-content::before {
+            left: auto;
+            right: -8px;
+            border-width: 8px 0 8px 8px;
+            border-color: transparent transparent transparent var(--primary-color);
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.5rem;
+        }
+
+        .message.user .message-time {
+            color: var(--gray-300);
+        }
+
+        .chat-input {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .thinking {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            background-color: var(--gray-100);
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            color: var(--gray-600);
+        }
+
+        .thinking .dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .thinking .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--gray-500);
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .thinking .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .thinking .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        input[type="text"],
+        button {
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--gray-300);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="text"] {
+            flex: 1;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        button.secondary {
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        button.secondary:hover {
+            background-color: var(--gray-300);
+        }
+
+        .section-header {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--gray-700);
+            margin-bottom: 0.75rem;
+        }
+
+        .file-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .upload-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            border: 2px dashed var(--gray-300);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-button:hover {
+            border-color: var(--primary-color);
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: var(--gray-400);
+        }
+
+        .upload-text {
+            font-size: 0.875rem;
+            color: var(--gray-500);
+            text-align: center;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .file-info {
+            display: none;
+            padding: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--border-radius);
+            background-color: var(--gray-100);
+        }
+
+        .file-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+        }
+
+        .status {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+        }
+
+        .status.info {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: var(--accent-color);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .status.success {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status.warning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status i {
+            margin-right: 0.5rem;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background-color: var(--gray-100);
+            border-radius: var(--border-radius);
+            font-size: 0.875rem;
+        }
+
+        .api-input {
+            margin-top: 0.5rem;
+        }
+
+        .processing-status {
+            display: none; /* Initially hidden */
+            background-color: rgba(16, 185, 129, 0.1);
+            padding: 0.75rem;
+            border-radius: var(--border-radius);
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--success-color);
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .processing-status i {
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 1rem 0;
+            border-top: 1px solid var(--gray-200);
+            font-size: 0.875rem;
+            color: var(--gray-500);
+        }
+
+        .suggestions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .suggestion-chip {
+            padding: 0.5rem 0.75rem;
+            background-color: var(--gray-200);
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .suggestion-chip:hover {
+            background-color: var(--primary-light);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            main {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                order: 1;
+            }
+
+            .chat-container {
+                order: 2;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-robot"></i>
+                <span>AI Chatbot (Demo)</span>
+            </div>
+            <div class="tagline">Powered by Infinite AI</div>
+        </header>
+
+        <main>
+            <div class="sidebar">
+                <div class="section-header">Upload PDF</div>
+                <div class="file-upload">
+                    <label for="fileInput" class="upload-button">
+                        <div class="upload-icon">
+                            <i class="fas fa-file-pdf"></i>
+                        </div>
+                        <div class="upload-text">
+                            <strong>Click to upload</strong> or drag and drop<br>
+                            PDF files only
+                        </div>
+                    </label>
+                    <input type="file" id="fileInput" accept=".pdf" />
+
+                    <div class="file-info" id="fileInfo">
+                        <div class="file-name" id="fileName"></div>
+                        <div class="file-size" id="fileSize"></div>
+                        <button id="processFileBtn" class="secondary">
+                            <i class="fas fa-cog"></i> Process File
+                        </button>
+                    </div>
+                </div>
+
+                <div class="status info" id="initialStatus">
+                    <i class="fas fa-info-circle"></i>
+                    Please upload a PDF file to begin.
+                </div>
+
+                <div class="processing-status" id="processingStatus">
+                    <i class="fas fa-spinner"></i>
+                    <span>Processing your document...</span>
+                </div>
+
+                <div class="section-header">Connection</div>
+                <div class="connection-status">
+                    <i class="fas fa-plug"></i>
+                    <span>Backend API:</span>
+                </div>
+                <div class="api-input">
+                    <input type="text" id="apiUrlInput" placeholder="Enter ngrok URL" value="">
+                    <button id="connectBtn" class="secondary">
+                        <i class="fas fa-link"></i> Connect
+                    </button>
+                </div>
+            </div>
+
+            <div class="chat-container">
+                <div class="chat-header">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat with your PDF</span>
+                    <div class="status-indicator"></div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message">
+                        <div class="avatar bot">AI</div>
+                        <div class="message-content">
+                            Hello! I'm AI Chatbot by Infinite AI. Upload a PDF document, and I'll help you understand its contents. You can ask me any questions about the document.
+                            <div class="message-time">Just now</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-input">
+                    <input type="text" id="messageInput" placeholder="Type your question here..." disabled>
+                    <button id="sendBtn" disabled>
+                        <i class="fas fa-paper-plane"></i> Send
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            &copy; 2025 Infinite AI | PDF Chatbot Demo
+        </footer>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const processFileBtn = document.getElementById('processFileBtn');
+        const initialStatus = document.getElementById('initialStatus');
+        const processingStatus = document.getElementById('processingStatus');
+        const apiUrlInput = document.getElementById('apiUrlInput');
+        const connectBtn = document.getElementById('connectBtn');
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const statusIndicator = document.querySelector('.status-indicator');
+
+        // State variables
+        let apiBaseUrl = '';
+        let isConnected = false;
+        let pdfProcessed = false;
+        let pdfFile = null;
+        let isThinking = false;
+
+        // Event listeners
+        fileInput.addEventListener('change', handleFileSelected);
+        processFileBtn.addEventListener('click', processFile);
+        connectBtn.addEventListener('click', connectToBackend);
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        sendBtn.addEventListener('click', sendMessage);
+
+        // Check if we have a stored API URL
+        const storedApiUrl = localStorage.getItem('pdfChatbotApiUrl');
+        if (storedApiUrl) {
+            apiUrlInput.value = storedApiUrl;
+            // Auto-connect if we have a stored URL
+            setTimeout(connectToBackend, 500);
+        }
+
+        // Functions
+        function handleFileSelected(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                pdfFile = file;
+                fileName.textContent = file.name;
+                fileSize.textContent = formatFileSize(file.size);
+                fileInfo.style.display = 'block';
+                initialStatus.innerHTML = '<i class="fas fa-check-circle"></i> PDF selected. Click "Process File" to continue.';
+                initialStatus.className = 'status success';
+            } else {
+                pdfFile = null;
+                fileInfo.style.display = 'none';
+                initialStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please select a valid PDF file.';
+                initialStatus.className = 'status error';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            else return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        function connectToBackend() {
+            const url = apiUrlInput.value.trim();
+            if (!url) {
+                alert('Please enter the ngrok URL');
+                return;
+            }
+
+            // Store the URL for future use
+            localStorage.setItem('pdfChatbotApiUrl', url);
+            
+            // Format the URL correctly (remove trailing slash if present)
+            apiBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+            
+            // Test the connection
+            fetch(`${apiBaseUrl}/status`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Failed to connect to backend');
+                })
+                .then(data => {
+                    isConnected = true;
+                    statusIndicator.style.backgroundColor = 'var(--success-color)';
+                    
+                    // Update UI
+                    addSystemMessage('Connected to backend successfully! You can now upload and process a PDF.');
+                    connectBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                    connectBtn.disabled = true;
+                    apiUrlInput.disabled = true;
+                })
+                .catch(error => {
+                    console.error('Connection error:', error);
+                    isConnected = false;
+                    statusIndicator.style.backgroundColor = 'var(--danger-color)';
+                    
+                    addSystemMessage('Failed to connect to backend. Please check the URL and try again.');
+                });
+        }
+
+        function processFile() {
+            if (!isConnected) {
+                alert('Please connect to the backend first.');
+                return;
+            }
+
+            if (!pdfFile) {
+                alert('Please select a PDF file.');
+                return;
+            }
+
+            // Show processing status
+            processingStatus.style.display = 'flex';
+            initialStatus.style.display = 'none';
+            processFileBtn.disabled = true;
+
+            // Create form data
+            const formData = new FormData();
+            formData.append('file', pdfFile);
+
+            // Send the file to the backend
+            fetch(`${apiBaseUrl}/process_pdf`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to process PDF');
+            })
+            .then(data => {
+                // Update UI
+                processingStatus.style.display = 'none';
+                pdfProcessed = true;
+                
+                // Enable chat
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                
+                addSystemMessage(`PDF processed successfully! ${data.chunks || ''} chunks extracted. You can now ask questions about the document.`);
+                
+                // Add some suggested questions
+                addSuggestions();
+            })
+            .catch(error => {
+                console.error('Processing error:', error);
+                processingStatus.style.display = 'none';
+                processFileBtn.disabled = false;
+                
+                initialStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Failed to process PDF. Please try again.';
+                initialStatus.className = 'status error';
+                initialStatus.style.display = 'block';
+            });
+        }
+
+        function addSuggestions() {
+            const suggestions = [
+                "What is the main topic?",
+                "Can you summarize this document?",
+                "What are the key points?",
+                "Who is the author?"
+            ];
+
+            const suggestionsDiv = document.createElement('div');
+            suggestionsDiv.className = 'message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar bot';
+            avatar.textContent = 'AI';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.innerHTML = 'Here are some questions you might want to ask:';
+            
+            const suggestionsChips = document.createElement('div');
+            suggestionsChips.className = 'suggestions';
+            
+            suggestions.forEach(suggestion => {
+                const chip = document.createElement('div');
+                chip.className = 'suggestion-chip';
+                chip.textContent = suggestion;
+                chip.addEventListener('click', () => {
+                    messageInput.value = suggestion;
+                    sendMessage();
+                });
+                suggestionsChips.appendChild(chip);
+            });
+            
+            content.appendChild(suggestionsChips);
+            suggestionsDiv.appendChild(avatar);
+            suggestionsDiv.appendChild(content);
+            chatMessages.appendChild(suggestionsDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !isConnected || !pdfProcessed || isThinking) return;
+
+            // Add user message to chat
+            addUserMessage(message);
+            messageInput.value = '';
+
+            // Show thinking indicator
+            showThinking();
+
+            // Send message to backend
+            fetch(`${apiBaseUrl}/ask`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query: message })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to get response');
+            })
+            .then(data => {
+                // Hide thinking indicator
+                hideThinking();
+                
+                // Add bot response
+                addBotMessage(data.response);
+            })
+            .catch(error => {
+                console.error('Error getting response:', error);
+                hideThinking();
+                addSystemMessage('Sorry, I encountered an error while processing your question. Please try again.');
+            });
+        }
+
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar user';
+            avatar.textContent = 'You';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = text;
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = getCurrentTime();
+            
+            content.appendChild(time);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addBotMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar bot';
+            avatar.textContent = 'AI';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = text;
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = getCurrentTime();
+            
+            content.appendChild(time);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar bot';
+            avatar.textContent = 'AI';
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.innerHTML = `<i class="fas fa-info-circle"></i> ${text}`;
+            
+            const time = document.createElement('div');
+            time.className = 'message-time';
+            time.textContent = getCurrentTime();
+            
+            content.appendChild(time);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showThinking() {
+            isThinking = true;
+            
+            const thinkingDiv = document.createElement('div');
+            thinkingDiv.className = 'thinking';
+            thinkingDiv.id = 'thinkingIndicator';
+            
+            thinkingDiv.innerHTML = `
+                <i class="fas fa-brain"></i>
+                <span>Thinking</span>
+                <div class="dots">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                </div>
+            `;
+            
+            chatMessages.appendChild(thinkingDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Disable input while thinking
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+        }
+
+        function hideThinking() {
+            isThinking = false;
+            const thinkingIndicator = document.getElementById('thinkingIndicator');
+            if (thinkingIndicator) {
+                thinkingIndicator.remove();
+            }
+            
+            // Re-enable input
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Optional: Add drag and drop functionality
+        const uploadArea = document.querySelector('.upload-button');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--primary-color)';
+            uploadArea.style.backgroundColor = 'rgba(79, 70, 229, 0.05)';
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = 'var(--gray-300)';
+            uploadArea.style.backgroundColor = 'transparent';
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--gray-300)';
+            uploadArea.style.backgroundColor = 'transparent';
+            
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                // Manually set the file input value
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // Trigger the change event
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            } else {
+                initialStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Please select a valid PDF file.';
+                initialStatus.className = 'status error';
+            }
+        });
+    </script>
+</body>
+</html>     
