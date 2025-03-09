@@ -645,38 +645,53 @@
                 alert('Please enter the ngrok URL');
                 return;
             }
-
+            
             // Store the URL for future use
             localStorage.setItem('pdfChatbotApiUrl', url);
             
             // Format the URL correctly (remove trailing slash if present)
             apiBaseUrl = url.endsWith('/') ? url.slice(0, -1) : url;
             
-            // Test the connection
-            fetch(`${apiBaseUrl}/status`)
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    throw new Error('Failed to connect to backend');
-                })
-                .then(data => {
-                    isConnected = true;
-                    statusIndicator.style.backgroundColor = 'var(--success-color)';
-                    
-                    // Update UI
-                    addSystemMessage('Connected to backend successfully! You can now upload and process a PDF.');
-                    connectBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
-                    connectBtn.disabled = true;
-                    apiUrlInput.disabled = true;
-                })
-                .catch(error => {
-                    console.error('Connection error:', error);
-                    isConnected = false;
-                    statusIndicator.style.backgroundColor = 'var(--danger-color)';
-                    
-                    addSystemMessage('Failed to connect to backend. Please check the URL and try again.');
-                });
+            // Test the connection with improved error handling
+            fetch(`${apiBaseUrl}/status`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                console.log("Response status:", response.status);
+                if (response.ok) {
+                    // Try to parse as JSON, but fall back to text if it fails
+                    return response.text().then(text => {
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error("Failed to parse JSON:", e);
+                            console.log("Response text:", text.substring(0, 200) + "...");
+                            throw new Error("Invalid JSON response from server");
+                        }
+                    });
+                }
+                throw new Error(`Failed to connect to backend: ${response.status}`);
+            })
+            .then(data => {
+                console.log("Connection successful:", data);
+                isConnected = true;
+                statusIndicator.style.backgroundColor = 'var(--success-color)';
+                
+                // Update UI
+                addSystemMessage('Connected to backend successfully! You can now upload and process a PDF.');
+                connectBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                connectBtn.disabled = true;
+                apiUrlInput.disabled = true;
+            })
+            .catch(error => {
+                console.error('Connection error:', error);
+                isConnected = false;
+                statusIndicator.style.backgroundColor = 'var(--danger-color)';
+                
+                addSystemMessage('Failed to connect to backend. Please check the URL and try again.');
+            });
         }
 
         function processFile() {
